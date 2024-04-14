@@ -11,18 +11,24 @@ const fs            =       require('fs');                              // File 
 const Config        =       require(`${ROOT_DIR}/config`);              // Require Config
 const http          =       require('http');                            // HTTP Server
 const https         =       require('https');                           // HTTPs Server
-const ws            =       require('ws');                              // WebSocket Server
+const ws            =       require('ws');                              // Setup WebSocket Server
 const Debug         =       require(`${CORE_DIR}/debug`);               // Require Debug Library
 
 // Transport Library
 class Transport{
     // Constructor
     constructor(){
+        this.isRunned = false;
         this.credentials = null;
         this.certificates = null;
         this.httpServer = null;
         this.httpsServer = null;
-        this.wsServer = null;
+        this.relayServer = null;
+
+        this.onRelayConnected = function(){};
+        this.onRelayMessage = function(data, isBinary){};
+        this.onRelayError = function(error){};
+
         this.app = null;
         this.GetCredentials();
     }
@@ -36,6 +42,10 @@ class Transport{
         this.RunSSL(port=>{
             Debug.Log(`HTTPs Transport is completely started at ${port} port`);
         });
+        this.StartRelay(port=>{
+            Debug.Log(`WebSocket Relay Transport is completely started at ${port} port`);
+        })
+        this.isRunned = true;
     }
 
     // Run HTTP Server
@@ -56,14 +66,37 @@ class Transport{
         });
     }
 
-    // Open Web Socket
-    OpenSocket(){
-
+    // Setup Middleware for Application
+    AddToMiddleware(req, res, next){
+        req.transport = this;
+        next();
     }
 
-    // Dispose Socket
-    DisposeSocket( ){
+    // Start Server Relay
+    StartRelay(){
+        // Start over HTTP or HTTPs
+        let self = this;
+        let port = Config?.Transport?.WebSocketPort ?? 8443;
+        if(self.relayServer != null) return self.relayServer;
+        self.relayServer = new ws.WebSocketServer({ port: port });
 
+        self.relayServer.on('connection', function connection(ws) {
+            ws.on('error', error => {
+                Debug.LogError("Relay Server Connection Error: " + error);
+                self.onRelayError(error);
+            });
+          
+            ws.on('message', function message(data, isBinary) {
+                self.onRelayMessage(data, isBinary);
+                self.relayServer.clients.forEach(function each(client) {
+                  if (client !== ws && client.readyState === WebSocket.OPEN) {
+                    client.send(data, { binary: isBinary });
+                  }
+                });
+            });
+            
+            self.onRelayConnected();
+        });
     }
 
     // Get SSL Credentials

@@ -21,16 +21,17 @@ global.STATIC_DIR   =       path.join(ROOT_DIR, "/static");             // Stati
 //  Load Configuration and Debug
 const Config        =       require(`${ROOT_DIR}/config`);              // Require Config
 const Debug         =       require(`${CORE_DIR}/debug`);               // Require Debug Library
+const Transport     =       require(`${CORE_DIR}/transport`);           // Require Transport Library
 
 // Log Current Environment
 Debug.Log(`Application Initialization at environment \"${Config?.Environment}\"`);
 
 //  Require Express and Middlewares
 const app           =       express();                                  // Create Express Application
+app.use(Transport.AddToMiddleware);                                     // Add Transport Instance Middleware (req.transport)
 
 //  Setup Routing
 
 
 //  Setup Transport
-const Transport     =       require(`${CORE_DIR}/transport`);           // Require Transport Library
 Transport.Setup(app);

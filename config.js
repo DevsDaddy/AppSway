@@ -25,7 +25,7 @@ const Config = {
         PrivateKeyName: 'private.key',
         HttpPort: process.env.HTTP_PORT ?? 80,
         SslPort: process.env.SSL_PORT ?? 443,
-        WebSocketPort: process.env.WS_PORT ?? 8080
+        WebSocketPort: process.env.WS_PORT ?? 8443
     },
     DataLayer: {
 

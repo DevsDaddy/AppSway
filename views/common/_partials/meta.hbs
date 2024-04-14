@@ -1,0 +1,13 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{APP_NAME}} » {{title}}</title>
+{{#if description includeZero=true}}
+<meta name="description" content="{{description}}" />
+{{else}}
+<meta name="description" content="{{APP_DESC}}" />
+{{/if}}
+{{#if seo_robots includeZero=true}}
+<meta name="robots" content="{{seo_robots}}" />
+{{else}}
+<meta name="robots" content="index, follow" />
+{{/if}}

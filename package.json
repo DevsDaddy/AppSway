@@ -1,0 +1,40 @@
+{
+  "name": "com.devsdaddy.appsway",
+  "version": "0.9.0",
+  "description": "AppSway is an Open-Source toolkit for organizing Backend-as-a-Service for your projects. Includes dozens of essential modules for app and game development",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevsDaddy/AppSway.git"
+  },
+  "keywords": [
+    "app",
+    "sway",
+    "appsway",
+    "server",
+    "toolkit",
+    "backend",
+    "as",
+    "service",
+    "toolset",
+    "platform"
+  ],
+  "author": "DevsDaddy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DevsDaddy/AppSway/issues"
+  },
+  "homepage": "https://github.com/DevsDaddy/AppSway#readme",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "https": "^1.0.0",
+    "path": "^0.12.7",
+    "ws": "^8.16.0"
+  }
+}

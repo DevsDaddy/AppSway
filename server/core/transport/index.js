@@ -73,13 +73,19 @@ class Transport{
     }
 
     // Start Server Relay
-    StartRelay(){
+    StartRelay(onConnected = null, onMessage = null, onError = null){
         // Start over HTTP or HTTPs
         let self = this;
         let port = Config?.Transport?.WebSocketPort ?? 8443;
         if(self.relayServer != null) return self.relayServer;
-        self.relayServer = new ws.WebSocketServer({ port: port });
 
+        // Add Handlers
+        if(onConnected !== undefined && onConnected != null && typeof onConnected == "function") self.onRelayConnected = onConnected;
+        if(onMessage !== undefined && onMessage != null && typeof onMessage == "function") self.onRelayMessage = onMessage;
+        if(onError !== undefined && onError != null && typeof onError == "function") self.onRelayError = onError;
+
+        // Start Relay
+        self.relayServer = new ws.WebSocketServer({ port: port });
         self.relayServer.on('connection', function connection(ws) {
             ws.on('error', error => {
                 Debug.LogError("Relay Server Connection Error: " + error);

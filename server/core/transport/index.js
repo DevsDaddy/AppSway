@@ -42,9 +42,8 @@ class Transport{
         this.RunSSL(port=>{
             Debug.Log(`HTTPs Transport is completely started at ${port} port`);
         });
-        this.StartRelay(port=>{
-            Debug.Log(`WebSocket Relay Transport is completely started at ${port} port`);
-        })
+        if(Config?.Transport?.StartRelay)
+            this.StartRelay();
         this.isRunned = true;
     }
 
@@ -103,6 +102,36 @@ class Transport{
             
             self.onRelayConnected();
         });
+
+        Debug.Log(`WebSocket Relay Transport is completely started at ${port} port`);
+    }
+
+    // Start New Socket
+    StartSocket(port, onConnected = null, onMessage = null, onError = null){
+        let self = this;
+        
+        // Add Callbacks
+        let connectedCallback = onConnected || function(ws){};
+        let messageCallback = onMessage || function(data, isBinary){};
+        let errorCallback = onError || function(error){};
+
+        // Start Server
+        let socketServer = new ws.WebSocketServer({ port: port });
+        socketServer.on('connection', function connection(ws) {
+            socketServer.on('error', error => {
+                Debug.LogError("Socket Server Connection Error: " + error);
+                errorCallback(error);
+            });
+          
+            ws.on('message', function message(data, isBinary) {
+                messageCallback(data, isBinary);
+            });
+            
+            connectedCallback(ws);
+        });
+
+        Debug.Log(`New WebSocket Transport is completely started at ${port} port`);
+        return socketServer;
     }
 
     // Get SSL Credentials

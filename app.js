@@ -31,7 +31,8 @@ const app           =       express();                                  // Creat
 app.use(Transport.AddToMiddleware);                                     // Add Transport Instance Middleware (req.transport)
 
 //  Setup Routing
-
+app.use(express.static('static'));                                      // Add Static Routes
+app.use(express.static('client'));                                      // Add Client Static Routes
 
 //  Setup Transport
 Transport.Setup(app);

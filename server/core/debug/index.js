@@ -76,7 +76,7 @@ class Debug{
     }
 
     // Write File Log Line
-    WriteFileLine(type, message){
+    WriteFileLine(message, type){
         if(this.logStream == null) this.WriteFileLogHeader();
         let finalMessage = `[${type.toUpperCase()}] (${this.GetLogDateFormat("d.m.y, h:i:s")}): ${message}\n`;
         this.logStream.write(finalMessage);

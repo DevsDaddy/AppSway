@@ -66,9 +66,10 @@ class Router {
             return res.status(404).render("system/error", {
                 title: title,
                 message : message,
-                description: message,
+                seo_description: message,
                 seo_robots: "noindex,nofollow",
                 stack: stack,
+                not_found: true,
                 code: code
             });
         }
@@ -88,7 +89,7 @@ class Router {
             return res.status(404).render("system/error", {
                 title: title,
                 message : message,
-                description: message,
+                seo_description: message,
                 seo_robots: "noindex,nofollow",
                 stack: stack,
                 code: code

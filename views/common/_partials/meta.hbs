@@ -1,8 +1,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>{{APP_NAME}} » {{title}}</title>
-{{#if description includeZero=true}}
-<meta name="description" content="{{description}}" />
+{{#if seo_description includeZero=true}}
+<meta name="description" content="{{seo_description}}" />
 {{else}}
 <meta name="description" content="{{APP_DESC}}" />
 {{/if}}
@@ -10,4 +11,7 @@
 <meta name="robots" content="{{seo_robots}}" />
 {{else}}
 <meta name="robots" content="index, follow" />
+{{/if}}
+{{#if seo_keywords includeZero=true}}
+<meta name="keywords" content="{{seo_keywords}}" />
 {{/if}}

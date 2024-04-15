@@ -1,5 +1,5 @@
 # Welcome to AppSway Platform
-[image]
+![AppSway Platform](https://github.com/DevsDaddy/AppSway/assets/147835900/33ba6564-ccff-4f2f-9414-ec10b47e590b)
 
 [Description]
 

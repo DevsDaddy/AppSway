@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="{{#if language includeZero=true}}{{language}}{{else}}en{{/if}}" dir="ltr" data-nav-layout="vertical" data-theme-mode="dark" data-header-styles="dark" data-menu-styles="dark" data-toggled="close">
+    <head>
+        {{> meta }}
+        {{> theme_base }}
+    </head>
+    <body>
+        <!-- Loader -->
+        <div id="loader" >
+            <img src="/assets/images/media/loader.svg" alt="">
+        </div>
+        <!-- Loader -->
+
+        <div class="container-lg">
+            <div class="row justify-content-center authentication authentication-basic align-items-center h-100">
+                <div class="col-xxl-4 col-xl-5 col-lg-5 col-md-6 col-sm-8 col-12">
+                    <div class="my-4 d-flex justify-content-center">
+                        <a href="/">
+                            <img src="/assets/images/brand-logos/desktop-dark.png" alt="logo">
+                        </a>
+                    </div>
+                    <div class="card custom-card">
+                        <div class="card-body p-5">
+                            <p class="h5 fw-semibold mb-2 text-center">Forgot Password</p>
+                            <p class="mb-4 text-muted op-7 fw-normal text-center">Restore {{APP_NAME}} account access</p>
+
+                            {{#if error includeZero=true}}
+                            <div id="error" class="alert alert-danger rounded-pill fade show">
+                                {{error}}
+                            </div>
+                            {{/if}}
+                            <form id="signin" name="signin" method="post" action="/auth/request_forgot/">
+                                {{#if redirect includeZero=true}}
+                                <input type="hidden" name="redirect" value="{{redirect}}" />
+                                {{/if}}
+                                <input type="hidden" name="from" value="web" />
+                                <div class="row gy-3">
+                                    <div class="col-xl-12">
+                                        <label for="signin-email" class="form-label text-default">Account Email:</label>
+                                        <input type="email" required class="form-control form-control-lg" id="signin-email" name="email" placeholder="Please, type your Email">
+                                    </div>
+                                    <div class="col-xl-12 d-grid mt-2">
+                                        <button type="submit" class="btn btn-lg btn-primary">Send Code</button>
+                                    </div>
+                                </div>
+                            </form>
+
+                            
+                            <div class="text-center">
+                                <p class="text-muted mt-3">Remember your password? <a href="/auth/" class="text-primary">Sign In</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{> base_scripts }}
+    </body>
+</html>

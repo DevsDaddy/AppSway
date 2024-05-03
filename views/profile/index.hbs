@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="{{#if language includeZero=true}}{{language}}{{else}}en{{/if}}" dir="ltr" data-nav-layout="vertical" data-theme-mode="dark" data-header-styles="dark" data-menu-styles="dark" data-toggled="close">
+    <head>
+        {{> meta }}
+        {{> dashboard_base }}
+    </head>
+    <body>
+        <!-- Loader -->
+        <div id="loader" >
+            <img src="../assets/images/media/loader.svg" alt="">
+        </div>
+        <!-- Loader -->
+
+        <div class="page">
+            {{> dashboard_header }}
+            {{> dashboard_sidebar }}
+
+            <div class="main-content app-content">
+
+            </div>
+
+            {{> dashboard_footer }}
+        </div>
+
+        {{> dashboard_scripts}}
+        <script src="/assets/js/profile.js"></script>
+        <script src="/assets/js/custom.js"></script>
+    </body>
+</html>

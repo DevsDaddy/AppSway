@@ -41,6 +41,22 @@ const Config = {
         Host: process.env.DB_HOST ?? "localhost",                   // Database Host
         Port: process.env.DB_PORT ?? 3306,                          // Database Port
         Type: process.env.DB_TYPE ?? "mysql"                        // Database Type
+    },
+    Authentication: {
+        GuestLogin: true,                       // Accept Application Guest Login
+        ConfirmEmails: true,                    // Confirm Emails via Email code
+        GuestLifetime: 12,                      // Guest Accounts Lifetime in months
+        
+    },
+    Nodemailer: {
+        from: process.env.SMTP_FROM ?? "AppSway <my@mysite.com>",
+        host: process.env.SMTP_HOST ?? "smtp.mysite.com",
+        port: process.env.SMTP_PORT ?? 465,
+        secure: true,
+        auth: {
+            user: process.env.SMTP_USER ?? "my@mysite.com",
+            pass: process.env.SMTP_PASSWORD ?? "myemailpassword",
+        },
     }
 };
 

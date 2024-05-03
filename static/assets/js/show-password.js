@@ -15,3 +15,10 @@ let createpassword = (type, ele) => {
         ele.childNodes[0].classList.remove("ri-eye-off-line")
     }
 }
+
+let passActivators = document.querySelectorAll('[data-action="show_password"]');
+passActivators.forEach(button => {
+    button.onclick = function(){
+        createpassword(button.getAttribute("data-form"), button);
+    }; 
+});

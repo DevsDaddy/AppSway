@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="{{#if language includeZero=true}}{{language}}{{else}}en{{/if}}" dir="ltr" data-nav-layout="vertical" data-theme-mode="dark" data-header-styles="dark" data-menu-styles="dark" data-toggled="close">
+    <head>
+        {{> meta }}
+        {{> theme_base }}
+    </head>
+    <body>
+        <!-- Loader -->
+        <div id="loader" >
+            <img src="/assets/images/media/loader.svg" alt="">
+        </div>
+        <!-- Loader -->
+
+        <div class="container-lg">
+            <div class="row justify-content-center authentication authentication-basic align-items-center h-100">
+                <div class="col-xxl-4 col-xl-5 col-lg-5 col-md-6 col-sm-8 col-12">
+                    <div class="my-4 d-flex justify-content-center">
+                        <a href="/">
+                            <img src="/assets/images/brand-logos/desktop-dark.png" alt="logo">
+                        </a>
+                    </div>
+                    <div class="card custom-card">
+                        <div class="card-body p-5">
+                            <p class="h5 fw-semibold mb-2 text-center">Sign In</p>
+                            <p class="mb-4 text-muted op-7 fw-normal text-center">Welcome back to <b>{{APP_NAME}}</b>!</p>
+
+                            {{#if error includeZero=true}}
+                            <div id="error" class="alert alert-danger rounded-pill fade show">
+                                {{error}}
+                            </div>
+                            {{/if}}
+                            {{#if activated includeZero=true}}
+                            <div class="alert alert-success rounded-pill fade show">
+                                Your account has been successfully verified. You can now log in using your credentials.
+                            </div>
+                            {{/if}}
+                            <form id="signin" name="signin" method="post" action="/auth/login/">
+                                {{#if redirect includeZero=true}}
+                                <input type="hidden" name="redirect" value="{{redirect}}" />
+                                {{/if}}
+                                <input type="hidden" name="from" value="web" />
+                                <div class="row gy-3">
+                                    <div class="col-xl-12">
+                                        <label for="signin-email" class="form-label text-default">Email:</label>
+                                        <input type="email" required class="form-control form-control-lg" id="signin-email" name="email" placeholder="Please, type your Email">
+                                    </div>
+                                    <div class="col-xl-12 mb-2">
+                                        <label for="signin-password" class="form-label text-default d-block">Password<a href="/auth/forgot/" class="float-end text-danger">Forget password ?</a></label>
+                                        <div class="input-group">
+                                            <input type="password" maxlength="32" required class="form-control form-control-lg" id="signin-password" name="password" placeholder="Please, type your password">
+                                            <button class="btn btn-light" type="button" id="button-addon2" data-action="show_password" data-form="signin-password"><i class="ri-eye-off-line align-middle"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-12 d-grid mt-2">
+                                        <button type="submit" class="btn btn-lg btn-primary">Sign In</button>
+                                    </div>
+                                </div>
+                            </form>
+
+                            
+                            <div class="text-center">
+                                <p class="text-muted mt-3">Dont have an account? <a href="/auth/sign_up/" class="text-primary">Sign Up</a></p>
+                            </div>
+                            <div class="text-center my-3 authentication-barrier">
+                                <span>OR</span>
+                            </div>
+                            <div class="btn-list text-center">
+                                <button type="button" aria-label="button" class="btn btn-icon btn-primary-transparent">
+                                    <i class="ri-facebook-fill"></i>
+                                </button>
+                                <button type="button" aria-label="button" class="btn btn-icon btn-primary-transparent">
+                                    <i class="ri-google-fill"></i>
+                                </button>
+                                <button type="button" aria-label="button" class="btn btn-icon btn-primary-transparent">
+                                    <i class="ri-twitter-fill"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{> base_scripts }}
+
+        <!-- Show Password JS -->
+        <script src="/assets/js/show-password.js"></script>
+    </body>
+</html>

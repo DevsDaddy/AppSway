@@ -10,41 +10,67 @@ const path          =       require('path');                            // Path 
 const fs            =       require('fs');                              // File System
 const Config        =       require(`${ROOT_DIR}/config`);              // Require Config
 const Debug         =       require(`${CORE_DIR}/debug`);               // Require Debug Library
-const { Sequelize } =       require('sequelize');                       // Require Sequelize Library
+const { Sequelize, DataTypes } =       require('sequelize');            // Require Sequelize Library
+
+// Database Instance
+let db = null;
+let models = {};
 
 // Data Layer Library
 class DataLayer {
-    // Create Database Connection
-    constructor(){
-        this.db = null;
-    }
-
     // Try to Connect with Database
-    async Connect(){
+    static async Connect(){
         // Create Database Instance
-        if(this.db != null) return;
-        this.db = new Sequelize(`${Config?.DataLayer?.Type}://${Config?.DataLayer?.Login}:${Config?.DataLayer?.Password}@${Config?.DataLayer?.Host}:${Config?.DataLayer?.Port}/${Config?.DataLayer?.Database}`);
+        if(db != null) return;
+        db = new Sequelize(`${Config?.DataLayer?.Type}://${Config?.DataLayer?.Login}:${Config?.DataLayer?.Password}@${Config?.DataLayer?.Host}:${Config?.DataLayer?.Port}/${Config?.DataLayer?.Database}`);
 
         try {
-            await this.db.authenticate();
+            await db.authenticate();
             Debug.Log("Connection has been established successfully.");
         } catch (error) {
             Debug.LogError(`Unable to connect to the database: ${error}`);
         }
 
-        return this.db;
+        return db;
     }
 
-    // Load Application Models
+    // Load Model
+    static LoadModel(name, path){
+        // Check Model Exitsts
+        if(models.hasOwnProperty(name)){
+            return models[name];
+        }
+
+        // Load model at Cache
+        try{
+            let baseModel = require(path);
+            models[name] = baseModel(db, Sequelize, DataTypes);
+            models[name].sync();
     
+            return models[name];
+        }catch(error){
+            Debug.LogError(`Failed to load model \"${name}\". Error: \"${error}\"`);
+            return;
+        }
+    }
+
+    // Get Model by Name
+    static GetModel(name){
+        // Check Model Exitsts
+        if(models.hasOwnProperty(name)){
+            return models[name];
+        }
+
+        return null;
+    }
 
     // Sync All Required Models
-    async Sync(){
-        if(!this.db){
+    static async Sync(){
+        if(!db){
             throw new Error(`Failed to Sync Databases. Database Instance is not found`);
         }
 
-        this.db.sync().then(function() {
+        db.sync().then(function() {
             Debug.Log(`All databases sync complete`);
         }).catch(function(err) {
             Debug.LogError(`Failed to Sync Database ${err}`);
@@ -52,5 +78,5 @@ class DataLayer {
     }
 }
 
-let dataLayerInstance = new DataLayer();
-module.exports = dataLayerInstance;
+// Export Data Layer
+module.exports = DataLayer;

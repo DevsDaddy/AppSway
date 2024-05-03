@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="{{#if language includeZero=true}}{{language}}{{else}}en{{/if}}" dir="ltr" data-nav-layout="vertical" data-theme-mode="dark" data-header-styles="dark" data-menu-styles="dark" data-toggled="close">
+    <head>
+        {{> meta }}
+        {{> theme_base }}
+    </head>
+    <body>
+        <!-- Loader -->
+        <div id="loader" >
+            <img src="/assets/images/media/loader.svg" alt="">
+        </div>
+        <!-- Loader -->
+
+        <div class="container-lg">
+            <div class="row justify-content-center authentication authentication-basic align-items-center h-100">
+                <div class="col-xxl-4 col-xl-5 col-lg-5 col-md-6 col-sm-8 col-12">
+                    <div class="my-4 d-flex justify-content-center">
+                        <a href="/">
+                            <img src="/assets/images/brand-logos/desktop-dark.png" alt="logo">
+                        </a>
+                    </div>
+                    <div class="card custom-card">
+                        <div class="card-body p-5">
+                            <p class="h5 fw-semibold mb-2 text-center">Confirm your account</p>
+                            <p class="mb-4 text-muted op-7 fw-normal text-center">Thank you for creation of {{APP_NAME}} account. An email has been sent to your email with an activation code for your account.</p>
+
+                            {{#if error includeZero=true}}
+                            <div id="error" class="alert alert-danger rounded-pill fade show">
+                                {{error}}
+                            </div>
+                            {{/if}}
+                            <form id="signin" name="signin" method="post" action="/auth/confirm_account/">
+                                {{#if redirect includeZero=true}}
+                                <input type="hidden" name="redirect" value="{{redirect}}" />
+                                {{/if}}
+                                <input type="hidden" name="from" value="web" />
+                                <div class="row gy-3">
+                                    <div class="col-xl-12">
+                                        <label for="signin-email" class="form-label text-default">Activation Code:</label>
+                                        <input type="text" value="{{#if code includeZero=true}}{{code}}{{/if}}" required class="form-control form-control-lg delimiter" id="signin-email" name="code" placeholder="Please, type your Activation Code">
+                                    </div>
+                                    <div class="col-xl-12 d-grid mt-2">
+                                        <button type="submit" class="btn btn-lg btn-primary">Confirm Account</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{> base_scripts }}
+
+        <!-- Cleave.js -->
+        <script src="/assets/libs/cleave.js/cleave.min.js"></script>
+        <!-- Internal form-input-mask JS -->
+        <script src="/assets/js/form-input-mask.js"></script>
+    </body>
+</html>

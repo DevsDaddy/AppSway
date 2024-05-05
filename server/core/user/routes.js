@@ -17,30 +17,40 @@ const Auth          =       require(`${CORE_DIR}/auth`);                // Requi
 const User          =       require(`${CORE_DIR}/user`);                // Require User Layer Library
 
 // Authentication Routes
-router.get("/", (req, res) => {
+router.get("/", Auth.CheckAuthentication, async (req, res, next) => {
     // Detect Errors and Redirect
     let error = Auth.FilterBase(req?.query?.error) ?? null;
     let redirect = req?.query?.redirect ?? null;
     let edited = req?.query?.edited ?? null;
 
     // Check if is not authenticated
-    if(!Auth.IsAlreadyAuthenticated(req, res)){
+    if(!req.isAuth){
         return res.redirect('/auth/');
     }
 
-    // Get User Profile
-    Auth.GetUserByID(req.user.user_id, function(userData){
-        return res.render("profile/index", {
-            title: "My Profile",
-            seo_description: `View profile information and status.`,
-            seo_robots: "noindex,nofollow",
-            error: error,
-            redirect: redirect,
-            edited: edited,
-            profile: userData
-        });
-    }, function(error){
-        throw new Error(error);
+    // Check if Error
+    if(!req.user){
+        return res.redirect('/notfound/');
+    }
+
+    // Get Additional User Profile
+    await User.SetupDataLayer();
+    let contacts = await User.GetUserContacts(req.user.id);
+    let additionalData = await User.GetUserAdditionalData(req.user.id);
+
+    // Render Profile
+    return res.render("profile/index", {
+        title: "My Profile",
+        seo_description: `View profile information and status.`,
+        seo_robots: "noindex,nofollow",
+        error: error,
+        redirect: redirect,
+        edited: edited,
+        profile: req.user,
+        contacts: contacts,
+        additional: additionalData,
+        isOnline: (User.IsUserOnline(req.user.last_online)) ? true : null,
+        editable: true
     });
 });
 

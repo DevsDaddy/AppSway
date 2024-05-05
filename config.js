@@ -49,13 +49,13 @@ const Config = {
         
     },
     Nodemailer: {
-        from: process.env.SMTP_FROM ?? "AppSway <my@mysite.com>",
-        host: process.env.SMTP_HOST ?? "smtp.mysite.com",
-        port: process.env.SMTP_PORT ?? 465,
-        secure: true,
+        from: process.env.SMTP_FROM ?? "AppSway <hello@asway.tech>",
+        host: process.env.SMTP_HOST ?? "smtp.ethereal.email",
+        port: process.env.SMTP_PORT ?? 587,
+        secure: false,
         auth: {
-            user: process.env.SMTP_USER ?? "my@mysite.com",
-            pass: process.env.SMTP_PASSWORD ?? "myemailpassword",
+            user: process.env.SMTP_USER ?? "norene.greenholt@ethereal.email",
+            pass: process.env.SMTP_PASSWORD ?? "4eThUFWwDf7bZV5Nc4",
         },
     }
 };

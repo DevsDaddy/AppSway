@@ -8,7 +8,6 @@
 //  Require Nessessary Libraries
 const express       =       require('express');                         // Express Library
 const path          =       require('path');                            // Path Library
-const passport      =       require('passport');                        // Require Passport Library
 const helmet        =       require('helmet');                          // Helmet Security
 const hbs           =       require('express-hbs');                     // Require Handlebars Renderer
 const session       =       require('express-session');                 // Require Express Session
@@ -22,6 +21,7 @@ global.APP_DIR      =       path.join(ROOT_DIR, "/server/application"); // Appli
 global.LOG_DIR      =       path.join(ROOT_DIR, "/logs");               // Logs Directory
 global.STATIC_DIR   =       path.join(ROOT_DIR, "/static");             // Static Directory
 global.VIEWS_DIR    =       path.join(ROOT_DIR, "/views");              // Setup Views Directory
+global.ADDONS_DIR   =       path.join(ROOT_DIR, "/server/addons");      // Setup Addons Directory
 
 //  Load Configuration and Debug
 const Config        =       require(`${ROOT_DIR}/config`);              // Require Config
@@ -32,12 +32,16 @@ const Transport     =       require(`${CORE_DIR}/transport`);           // Requi
 const DataLayer     =       require(`${CORE_DIR}/datalayer`);           // Require Data Layer
 const Router        =       require(`${CORE_DIR}/router`);              // Require Router Library
 const Auth          =       require(`${CORE_DIR}/auth`);                // Require Authentication Layer Library
+const HBSAddons     =       require(`${CORE_DIR}/utils/hbs`);           // Require HBS Addons
 
 // Log Current Environment
 Debug.Log(`Application Initialization at environment \"${Config?.Environment}\"`);
 
 // Trying to Connect with Database
 DataLayer.Connect().then(async db => {
+    // Setup Authentication Library
+    await Auth.SetupAuthentication();                                       // Setup Authentication Library
+
     //  Require Express and Middlewares
     const app           =       express();                                  // Create Express Application
     app.use(helmet());                                                      // Use Helmet Library
@@ -55,13 +59,7 @@ DataLayer.Connect().then(async db => {
         }
     }));
     app.use(Transport.AddToMiddleware);                                     // Add Transport Instance Middleware (req.transport)
-    app.use(passport.initialize());                                         // Use Passport Initialization
-    app.use(passport.session());                                            // Use Passport Session
-    app.disable('x-powered-by');
-
-    // Setup Authentication
-    await Auth.SetupAuthentication(passport);                               // Setup Authentication Library
-    await DataLayer.Sync();
+    app.disable('x-powered-by');                                            // Disable Powered-By
 
     //  Setup Render Engine
     app.engine('hbs', hbs.express4({
@@ -70,6 +68,9 @@ DataLayer.Connect().then(async db => {
     }));
     app.set('view engine', 'hbs');
     app.set('views', VIEWS_DIR);
+
+    // Setup HBS Addons
+    HBSAddons.Init(app, hbs);
 
     //  Setup Routing
     app.use(express.static('static'));                                      // Add Static Routes

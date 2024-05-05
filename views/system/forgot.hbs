@@ -29,7 +29,8 @@
                                 {{error}}
                             </div>
                             {{/if}}
-                            <form id="signin" name="signin" method="post" action="/auth/request_forgot/">
+                            <form id="forgot" autocomplete="off" name="forgot" method="post" action="/auth/request_forgot/">
+                                <input autocomplete="false" name="hidden" type="text" style="display:none;">
                                 {{#if redirect includeZero=true}}
                                 <input type="hidden" name="redirect" value="{{redirect}}" />
                                 {{/if}}

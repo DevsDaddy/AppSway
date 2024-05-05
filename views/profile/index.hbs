@@ -16,7 +16,242 @@
             {{> dashboard_sidebar }}
 
             <div class="main-content app-content">
+                <div class="container-fluid">
+                    <!-- PAGE-HEADER -->
+                    <div class="page-header">
+                      <h1 class="page-title my-auto">Profile</h1>
+                      <div>
+                        <ol class="breadcrumb mb-0">
+                          <li class="breadcrumb-item">
+                            <a href="/user/">User</a>
+                          </li>
+                          <li class="breadcrumb-item active" aria-current="page">Profile</li>
+                        </ol>
+                      </div>
+                    </div>
+                    <!-- PAGE-HEADER END -->
 
+                    <div class="row">
+                        <!-- PROFILE INFO -->
+                        <div class="col-xxl-3">
+
+                            <div class="card custom-card overflow-hidden">
+                                <div class="card-body border-bottom">
+                                    <div class="d-sm-flex  main-profile-cover">
+                                        <span class="avatar avatar-xxl {{#if isOnline includeZero=true}}online{{else}}offline{{/if}} me-3">
+                                            <img src="{{#if profile.avatar includeZero=true}}{{profile.avatar}}{{else}}/assets/images/faces/1.jpg{{/if}}" alt="{{profile.username}}" class="avatar avatar-xxl">
+                                        </span>
+                                        <div class="flex-fill main-profile-info my-auto">
+                                            {{#if profile.firstname includeZero=true}}
+                                            <h5 class="fw-semibold mb-1 ">{{profile.firstname}} {{profile.lastname}}</h5>
+                                            {{else}}
+                                            <h5 class="fw-semibold mb-1 ">{{profile.username}}</h5>
+                                            {{/if}}
+                                            <div>
+                                                <p class="mb-1 text-muted"><a href="/user/view/{{profile.username}}/">@{{profile.username}}</a></p>
+                                                <p class="fs-12 op-7 mb-0">
+                                                    {{#if profile.country includeZero=true}}
+                                                    <span class="me-3 d-inline-flex align-items-center"><i class="ri-building-line me-1 align-middle"></i>{{profile.country}}</span> 
+                                                    {{/if}}
+                                                    {{#if profile.city includeZero=true}}
+                                                    <span class="d-inline-flex align-items-center"><i class="ri-map-pin-line me-1 align-middle"></i>{{profile.city}}</span> 
+                                                    {{/if}}
+                                                </p>
+                                                {{#if profile.isAdmin}}
+                                                <p class="fs-12 op-7 mb-0">
+                                                    <span class="me-3 d-inline-flex align-items-center"><i class="ri-admin-line me-1 align-middle"></i>Administrator</span>
+                                                </p>
+                                                {{/if}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0 main-profile-info">
+                                    <div class="d-flex align-items-center justify-content-between w-100">
+                                        <div class="py-3 border-end w-100 text-center">
+                                            <p class="fw-bold fs-20  text-shadow mb-0">113</p>
+                                            <p class="mb-0 fs-12 text-muted ">Projects</p>
+                                        </div>
+                                        <div class="py-3 border-end w-100 text-center">
+                                            <p class="fw-bold fs-20  text-shadow mb-0">12.2k</p>
+                                            <p class="mb-0 fs-12 text-muted ">Followers</p>
+                                        </div>
+                                        <div class="py-3 w-100 text-center">
+                                            <p class="fw-bold fs-20  text-shadow mb-0">128</p>
+                                            <p class="mb-0 fs-12 text-muted ">Following</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card custom-card">
+                                <div class="p-4  border-bottom border-block-end-dashed">
+                                    <p class="fs-15 mb-2 me-4 fw-semibold">Personal Info :</p> 
+                                    <ul class="list-group">
+                                        <li class="list-group-item border-0">
+                                            <div class="d-flex flex-wrap align-items-center">
+                                                <div class="me-2 fw-semibold">
+                                                    Last Online :
+                                                </div>
+                                                <span class="fs-12 text-muted">{{#if isOnline includeZero=true}}Online{{else}}{{profile.last_online}}{{/if}}</span>
+                                            </div>
+                                        </li>
+                                        <li class="list-group-item border-0">
+                                            <div class="d-flex flex-wrap align-items-center">
+                                                <div class="me-2 fw-semibold">
+                                                    Name :
+                                                </div>
+                                                {{#if (or profile.firstname profile.lastname)}}
+                                                <span class="fs-12 text-muted">{{profile.firstname}} {{profile.lastname}}</span>
+                                                {{else}}
+                                                <span class="fs-12 text-muted">Not specified</span>
+                                                {{/if}}
+                                            </div>
+                                        </li>
+                                        {{#if contacts.company includeZero=true}}
+                                        <li class="list-group-item border-0">
+                                            <div class="d-flex flex-wrap align-items-center">
+                                                <div class="me-2 fw-semibold">
+                                                    Company :
+                                                </div>
+                                                <span class="fs-12 text-muted">{{contacts.company}}</span>
+                                            </div>
+                                        </li>
+                                        {{/if}}
+                                        {{#if contacts.job_title includeZero=true}}
+                                        <li class="list-group-item border-0">
+                                            <div class="d-flex flex-wrap align-items-center">
+                                                <div class="me-2 fw-semibold">
+                                                    Job Title :
+                                                </div>
+                                                <span class="fs-12 text-muted">{{contacts.job_title}}</span>
+                                            </div>
+                                        </li>
+                                        {{/if}}
+                                        {{#if additional.additional_data.age includeZero=true}}
+                                        <li class="list-group-item border-0">
+                                            <div class="d-flex flex-wrap align-items-center">
+                                                <div class="me-2 fw-semibold">
+                                                    Age :
+                                                </div>
+                                                <span class="fs-12 text-muted">{{additional.additional_data.age}}</span>
+                                            </div>
+                                        </li>
+                                        {{/if}}
+                                        <li class="list-group-item border-0">
+                                            <div class="d-flex flex-wrap align-items-center">
+                                                <div class="me-2 fw-semibold">
+                                                    About :
+                                                </div>
+                                                {{#if profile.about includeZero=true}}
+                                                <span class="fs-12 text-muted">{{profile.about}}</span>
+                                                {{else}}
+                                                <span class="fs-12 text-muted">Not specified</span>
+                                                {{/if}}
+                                            </div>
+                                        </li>
+                                        <li class="list-group-item border-0">
+                                            <div class="d-flex flex-wrap align-items-center">
+                                                <div class="me-2 fw-semibold">
+                                                    Registration Date :
+                                                </div>
+                                                <span class="fs-12 text-muted">{{profile.registration}}</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="p-4 border-bottom border-block-end-dashed">
+                                    <p class="fs-15 mb-2 me-4 fw-semibold">Contact Information :</p>
+                                    <div class="text-muted">
+                                        {{#if editable}}
+                                        <p class="mb-3">
+                                            <span class="avatar avatar-sm avatar-rounded me-2 bg-info-transparent">
+                                                <i class="ri-mail-line align-middle fs-14"></i>
+                                            </span>
+                                            {{profile.email}} (Only you can see)
+                                        </p>
+                                        {{/if}}
+                                        {{#if contacts.public_email includeZero=true}}
+                                        <p class="mb-3">
+                                            <span class="avatar avatar-sm avatar-rounded me-2 bg-info-transparent">
+                                                <i class="ri-mail-line align-middle fs-14"></i>
+                                            </span>
+                                            {{contacts.public_email}} {{#if editable}}(Public Email){{/if}}
+                                        </p>
+                                        {{/if}}
+                                        {{#if editable}}
+                                        {{#if contacts.phone_number includeZero=true}}
+                                        <p class="mb-3">
+                                            <span class="avatar avatar-sm avatar-rounded me-2 bg-warning-transparent">
+                                                <i class="ri-phone-line align-middle fs-14"></i>
+                                            </span>
+                                            {{contacts.phone_number}} (Only you can see)
+                                        </p>
+                                        {{/if}}
+                                        {{/if}}
+                                        {{#if (or profile.country profile.city)}}
+                                        <div class="d-flex">
+                                            <p class="mb-0">
+                                                <span class="avatar avatar-sm avatar-rounded me-2 bg-success-transparent">
+                                                    <i class="ri-map-pin-line align-middle fs-14"></i>
+                                                </span>
+                                            </p>
+                                            <p class="mb-0">
+                                            {{profile.country}}{{#if (and profile.country profile.city)}}, {{/if}}{{profile.city}}</p>
+                                        </div>
+                                        {{/if}}
+                                    </div>
+                                </div>
+                                {{#if additional.interests}}
+                                <div class="p-4 border-bottom border-block-end-dashed">
+                                    <p class="fs-15 mb-2 me-4 fw-semibold">Interests :</p>
+                                    <div>
+                                        {{#split additional.interests ','}}
+                                        <a href="/users/interests/{{this}}/">
+                                            <span class="badge bg-light text-muted m-1">{{this}}</span>
+                                        </a>
+                                        {{/split}}
+                                    </div>
+                                </div>
+                                {{/if}}
+                                {{#if (or contacts.facebook contacts.instagram contacts.youtube contacts.twitter contacts.github)}}
+                                <div class="p-4 border-bottom border-block-end-dashed d-flex align-items-center">
+                                    <p class="fs-15 mb-2 me-4 fw-semibold">Social Networks :</p>
+                                    <div class="btn-list mb-0">
+                                        {{#if contacts.facebook}}
+                                        <a href="{{contacts.facebook}}" target="_blank" class="btn btn-sm btn-icon btn-info-light btn-wave waves-effect waves-light">
+                                            <i class="ri-facebook-line"></i>
+                                        </a>
+                                        {{/if}}
+                                        {{#if contacts.instagram}}
+                                        <a href="{{contacts.instagram}}" target="_blank" class="btn btn-sm btn-icon btn-warning-light btn-wave waves-effect waves-light">
+                                            <i class="ri-instagram-line"></i>
+                                        </a>
+                                        {{/if}}
+                                        {{#if contacts.twitter}}
+                                        <a href="{{contacts.twitter}}" target="_blank" class="btn btn-sm btn-icon btn-secondary-light btn-wave waves-effect waves-light">
+                                            <i class="ri-twitter-line"></i>
+                                        </a>
+                                        {{/if}}
+                                        {{#if contacts.youtube}}
+                                        <a href="{{contacts.youtube}}" target="_blank" class="btn btn-sm btn-icon btn-danger-light btn-wave waves-effect waves-light">
+                                            <i class="ri-youtube-line"></i>
+                                        </a>
+                                        {{/if}}
+                                        {{#if contacts.github}}
+                                        <a href="{{contacts.github}}" target="_blank" class="btn btn-sm btn-icon btn-success-light btn-wave waves-effect waves-light">
+                                            <i class="ri-github-line"></i>
+                                        </a>
+                                        {{/if}}
+                                    </div>
+                                </div>
+                                {{/if}}
+                            </div>
+
+                        </div>
+                        <!-- PROFILE INFO -->
+                    </div>
+                </div>
             </div>
 
             {{> dashboard_footer }}

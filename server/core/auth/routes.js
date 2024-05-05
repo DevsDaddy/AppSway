@@ -16,14 +16,15 @@ const router        =       express.Router();                           // Requi
 const Auth          =       require(`${CORE_DIR}/auth`);                // Require Authentication Layer Library
 
 // Authentication Routes
-router.get("/", (req, res) => {
+router.get("/", Auth.CheckAuthentication, (req, res) => {
     // Detect Errors and Redirect
     let error = Auth.FilterBase(req?.query?.error) ?? null;
     let redirect = req?.query?.redirect ?? null;
     let activated = req?.query?.activated ?? null;
+    let password_changed = req?.query?.pass_changed ?? null;
 
     // Check if is already authenticated
-    if(Auth.IsAlreadyAuthenticated(req, res)){
+    if(req.isAuth){
         return res.redirect('/user/');
     }
 
@@ -34,16 +35,17 @@ router.get("/", (req, res) => {
         seo_robots: "noindex,nofollow",
         error: error,
         redirect: redirect,
-        activated: activated
+        activated: activated,
+        password_changed: password_changed
     });
 });
-router.get("/sign_up", (req, res) => {
+router.get("/sign_up", Auth.CheckAuthentication, (req, res) => {
     // Detect Errors and Redirect
     let error = Auth.FilterBase(req?.query?.error) ?? null;
     let redirect = req?.query?.redirect ?? null;
 
     // Check if is already authenticated
-    if(Auth.IsAlreadyAuthenticated(req, res)){
+    if(req.isAuth){
         return res.redirect('/user/');
     }
 
@@ -56,13 +58,13 @@ router.get("/sign_up", (req, res) => {
         redirect: redirect
     });
 });
-router.get("/forgot", (req, res) => {
+router.get("/forgot", Auth.CheckAuthentication, (req, res) => {
     // Detect Errors and Redirect
     let error = Auth.FilterBase(req?.query?.error) ?? null;
     let redirect = req?.query?.redirect ?? null;
 
     // Check if is already authenticated
-    if(Auth.IsAlreadyAuthenticated(req, res)){
+    if(req.isAuth){
         return res.redirect('/user/');
     }
 
@@ -75,14 +77,14 @@ router.get("/forgot", (req, res) => {
         redirect: redirect
     });
 });
-router.get("/reset", (req, res) => {
+router.get("/reset", Auth.CheckAuthentication, (req, res) => {
     // Detect Errors and Redirect
     let error = Auth.FilterBase(req?.query?.error) ?? null;
     let redirect = req?.query?.redirect ?? null;
     let code = Auth.FilterCode(req?.query?.code) ?? "";
 
     // Check if is already authenticated
-    if(Auth.IsAlreadyAuthenticated(req, res)){
+    if(req.isAuth){
         return res.redirect('/user/');
     }
 
@@ -96,14 +98,14 @@ router.get("/reset", (req, res) => {
         code: code
     });
 });
-router.get("/confirm", (req, res) => {
+router.get("/confirm", Auth.CheckAuthentication, (req, res) => {
     // Detect Errors and Redirect
     let error = Auth.FilterBase(req?.query?.error) ?? null;
     let redirect = req?.query?.redirect ?? null;
     let code = Auth.FilterCode(req?.query?.code) ?? "";
 
     // Check if is already authenticated
-    if(Auth.IsAlreadyAuthenticated(req, res)){
+    if(req.isAuth){
         return res.redirect('/user/');
     }
 
@@ -119,15 +121,15 @@ router.get("/confirm", (req, res) => {
 });
 
 // API Auth / Web Requests
-router.post("/login", Auth.Login);
-router.post("/register", Auth.Register);
-router.post("/guest_login", Auth.GuestLogin);
+router.post("/login", Auth.CheckAuthentication, Auth.Login);
+router.post("/register", Auth.CheckAuthentication, Auth.Register);
+router.post("/guest_signup", Auth.CheckAuthentication, Auth.GuestLogin);
 router.post("/logout", Auth.Logout);
 router.get("/logout", Auth.Logout);
-router.post("/request_forgot", Auth.RequestForgot);
-router.post("/reset_password", Auth.ResetPassword);
-router.post("/confirm_account", Auth.ConfirmAccount);
-router.post("/link_social", Auth.LinkSocial);
+router.post("/request_forgot", Auth.CheckAuthentication, Auth.RequestForgot);
+router.post("/reset_password", Auth.CheckAuthentication, Auth.ResetPassword);
+router.post("/confirm_account", Auth.CheckAuthentication, Auth.ConfirmAccount);
+router.post("/link_social", Auth.CheckAuthentication, Auth.LinkSocial);
 
 // Return Router Module
 module.exports = router;

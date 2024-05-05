@@ -14,86 +14,110 @@ const DataLayer     =       require(`${CORE_DIR}/datalayer`);           // Datal
 const Validator     =       require('validator');                       // Require Validator Library
 const bCrypt        =       require('bcryptjs');                        // Require BCrypt Library
 const Emails        =       require(`${CORE_DIR}/emails`);              // Emailing Library
+const session       =       require('express-session');                 // Session Library
 
 // Authentication Layer Class
 class Authentication {
-    static passport = null;
     static User = null;
-    static LocalStrategy = null;
-
-    // Check Authentication
-    static IsAuthenticated(req, res, next){
-        if (Authentication.passport == null){
-            throw new Error("Failed to process authentication. Passport library is not initialized.");
-        }
-        if (req.isAuthenticated())
-            return next();
-
-        if(req.isAPI){
-            return res.json({ success: false, code: 401, message: "Authentication Required. Please, sign-in and try again later", stack: null });
-        }
-
-        return res.redirect('/auth/');
-    }
-
-    // Check Already Authenticated
-    static IsAlreadyAuthenticated(req, res){
-        if (Authentication.passport == null){
-            throw new Error("Failed to process authentication. Passport library is not initialized.");
-        }
-
-        if (!req.isAuthenticated()) return false;
-        return true;
-    }
+    static Auth = null;
+    static Codes = null;
 
     // Setup Authentication
-    static async SetupAuthentication(passport){
-        Authentication.passport = passport;
+    static async SetupAuthentication(){
         Authentication.User = DataLayer.LoadModel('User', path.join(CORE_DIR, '/auth/models/user'));
         Authentication.Auth = DataLayer.LoadModel('Auth', path.join(CORE_DIR, '/auth/models/auth'));
         Authentication.Codes = DataLayer.LoadModel('Codes', path.join(CORE_DIR, '/auth/models/codes'));
-        Authentication.LocalStrategy = require('passport-local').Strategy;
-        Authentication.JsonCustom = require('passport-json-custom').Strategy;
+    }
 
-        // Serialize and Deserialize User
-        Authentication.SerializeDeserialize(Authentication.Auth);
-        Authentication.SetupLocalStartegies();
+    // Check Authentication
+    static async CheckAuthentication(req, res, next){
+        // Check Session User ID / Token
+        let authenticated = false;
+        let user_id = null;
+        let token = null;
+        let from = null;
+
+        if(req.session && req.session.user_id && req.session.token){
+            user_id = req.session.user_id;
+            token = req.session.token;
+            from = req.session?.from ?? 'local';
+        }else if(req.body && req.body.user_id && req.body.token){
+            user_id = req.body.user_id;
+            token = req.body.token;
+            from = req.body?.from ?? 'local';
+        }
+
+        if(user_id != null && token != null){
+            Authentication.CheckAuthCredentials(user_id, token, from, function(authData, userData){
+                authenticated = true;
+                req.isAuth = authenticated;
+                req.auth = authData;
+                req.user = userData;
+                
+                return next();
+            }, function(error){
+                req.isAuth = authenticated;
+                req.auth = null;
+                req.user = null;
+                return next();
+            });
+        }else{
+            // Setup Authentication Data
+            req.isAuth = authenticated;
+            req.auth = null;
+            req.user = null;
+            return next();
+        }
     }
 
     // Basic Login
     static Login(req, res, next){
         // Check if is already authenticated
-        if(Authentication.IsAlreadyAuthenticated(req, res)){
+        if(req.isAuth){
             return res.build(true, null, { redirect: '/user/' });
         }
 
-        // Authenticate
-        Authentication.passport.authenticate('local-signin', function(err, user, info, status){
-            if((info !== undefined && info != null && info.message !== undefined && info.message != null) || err){
-                let message = err ?? info.message;
-                req.session.destroy(function(err) {});
-                return res.build(false, message, { redirect: '/auth/'});
-            }
+        // Login and Password
+        let email = null;
+        let password = null;
 
-            if(!user){
-                req.session.destroy(function(err) {});
-                return res.build(false, 'Failed to authenticate. No authentication data found', { redirect: '/auth/' });
-            }
+        // Get Values
+        if(req.body && req.body.email && req.body.email.length > 0){
+            email = req.body.email;
+        }else{
+            return res.build(false, 'Please, type your email for authentication', { redirect: '/auth/' });
+        }
+        if(req.body && req.body.password && req.body.password.length > 0){
+            password = req.body.password;
+        }else{
+            return res.build(false, 'Please, type your password for authentication', { redirect: '/auth/' });
+        }
 
-            // Login
-            req.login(user, function(error) {
-                if (error){
-                    return res.build(false, error, { redirect: '/auth/' });
-                }
-                return res.build(true, null, { redirect: '/user/' });
-            });
-        })(req,res,next);
+        // Validate Login
+        if(!Validator.isEmail(email)){
+            return res.build(false, 'Please enter your email in full format. For example: myemail@example.com', { redirect: '/auth/' });
+        }
+
+        // Check Authentication Data
+        Authentication.CheckAuthData(email, password, 'local', function(authData, userData){
+            req.isAuth = true;
+            req.auth = authData;
+            req.user = userData;
+            req.session.user_id = userData.id;
+            req.session.token = authData.token;
+            req.session.from = authData.from;
+            req.session.save();
+            return res.build(true, null, { redirect: '/user/' });
+        }, function(error){
+            req.session.destroy(function(err) {});
+            return res.build(false, error?.message ?? error, { redirect: '/auth/'});
+        });
     }
 
     // Basic Registration
     static Register(req, res, next){
         // Check if is already authenticated
-        if(Authentication.IsAlreadyAuthenticated(req, res)){
+        if(req.isAuth){
             return res.build(true, null, { redirect: '/user/' });
         }
 
@@ -107,20 +131,60 @@ class Authentication {
             return res.build(false, error, { redirect: '/auth/sign_up/' });
         }
 
-        // Sign-Up using Passport
-        Authentication.passport.authenticate('local-signup', function(err, user, info, status){
-            if((info !== undefined && info != null && info.message !== undefined && info.message != null) || err){
-                let message = err ?? info.message;
-                return res.build(false, message, { redirect: '/auth/sign_up/'});
-            }
+        // Get Values
+        let email = null;
+        let password = null;
+        if(req.body && req.body.email && req.body.email.length > 0){
+            email = req.body.email;
+        }else{
+            return res.build(false, 'Please, type your email for authentication', { redirect: '/auth/' });
+        }
+        if(req.body && req.body.password && req.body.password.length > 0){
+            password = req.body.password;
+        }else{
+            return res.build(false, 'Please, type your password for authentication', { redirect: '/auth/' });
+        }
 
-            // Need Confirm Email
-            if(Config?.Authentication?.ConfirmEmails){
-                return res.build(true, null, { redirect: '/auth/confirm/', confirmedAccount: false });
-            }
+        // Check Password Confirmation
+        let confirmPass = req.body.confirm_password ?? null;
+        if(confirmPass == null || confirmPass != password){
+            return res.build(false, 'The passwords you entered do not match. Check if it is correct and try again.', { redirect: '/auth/sign_up/'});
+        }
 
-            return res.build(true, null, { redirect: '/user/', confirmedAccount: true });
-        })(req,res,next);
+        // Check User Name
+        if(!req.body || !req.body.username){
+            return res.build(false, 'Username is required to register a new account', { redirect: '/auth/sign_up/'});
+        }
+
+        // Create User Data
+        Authentication.CreateUserData({
+            firstname: "",
+            lastname: "",
+            username: req.body.username,
+            about: "",
+            email: email,
+            avatar: "",
+            status: Config?.Authentication?.ConfirmEmails ? "inactive" : "active"
+        }, function(newUser){
+            // Return Authentication Data
+            Authentication.CreateAuthData(email, password, 'local', newUser.id, function(newAuth){
+                Authentication.SendRegistrationEmail(newUser.id, newUser.email, newUser.username, function(){
+                    Debug.Log(`New User Registered: ID: ${newUser.id}, Email: ${email}, Username: ${newUser.username}`);
+
+                    if(Config?.Authentication?.ConfirmEmails){
+                        return res.build(true, null, { redirect: '/auth/confirm/', confirmedAccount: false });
+                    }
+
+                    return res.build(true, null, { redirect: '/user/', confirmedAccount: true });
+                }, function(error){
+                    return res.build(false, error?.message ?? error, { redirect: '/auth/sign_up/'});
+                });
+            }, function(error){
+                return res.build(false, error?.message ?? error, { redirect: '/auth/sign_up/'});
+            });
+        }, function(error){
+            return res.build(false, error?.message ?? error, { redirect: '/auth/sign_up/'});
+        });
     }
 
     // Basic Logout
@@ -134,7 +198,7 @@ class Authentication {
     // Guest Login
     static GuestLogin(req, res){
         // Check if is already authenticated
-        if(Authentication.IsAlreadyAuthenticated(req, res)){
+        if(req.isAuth){
             return res.build(true, null, { redirect: '/user/' });
         }
     }
@@ -142,24 +206,117 @@ class Authentication {
     // Request Forgot Password
     static RequestForgot(req, res){
         // Check if is already authenticated
-        if(Authentication.IsAlreadyAuthenticated(req, res)){
+        if(req.isAuth){
             return res.build(true, null, { redirect: '/user/' });
         }
+
+        // Get Values
+        let email = null;
+        if(req.body && req.body.email && req.body.email.length > 0){
+            email = req.body.email;
+        }else{
+            return res.build(false, 'Please enter your email address provided when registering your account.', { redirect: '/auth/forgot/' });
+        }
+
+        // Get User Data
+        Authentication.User.findOne({
+            where: {
+                email: email
+            }
+        }).then(function (user) {
+            // Check User Exists
+            if(!user){
+                onError('The user with this email address is not registered in the system.');
+                return;
+            }
+
+            // Check User Status
+            let userData = user.get();
+            if(userData.status == "inactive"){
+                onError('The user profile has not been activated.');
+                return;
+            }
+            if(userData.status == "banned"){
+                onError(`The user has been banned for violating the platform's terms of use`);
+                return;
+            }
+
+            // Get Authentication Data
+            Authentication.Auth.findOne({
+                where: {
+                    login: email,
+                    from: 'local'
+                }
+            }).then(function (auth) {
+                // Check Auth Exists
+                if(!auth){
+                    onError('The user with this email was registered by another authorization method without a password. Try logging in with your social networks using the same email.');
+                    return;
+                }
+
+                // Send Forgot Email
+                Authentication.SendForgotEmail(userData.id, userData.email, userData.username, function(){
+                    Debug.Log(`User Requested Password Recovery: ID: ${userData.id}, Email: ${userData.email}, Username: ${userData.username}`);
+                    return res.build(true, null, { redirect: '/auth/reset/' });
+                }, function(error){
+                    return res.build(false, error?.message ?? error, { redirect: '/auth/forgot/'});
+                });
+            }).catch(function (error) {
+                return res.build(false, error?.message ?? error, { redirect: '/auth/forgot/' });
+            });
+        }).catch(function (error) {
+            return res.build(false, error?.message ?? error, { redirect: '/auth/forgot/' });
+        });
     }
 
     // Reset password
     static ResetPassword(req, res){
         // Check if is already authenticated
-        if(Authentication.IsAlreadyAuthenticated(req, res)){
+        if(req.isAuth){
             return res.build(true, null, { redirect: '/user/' });
         }
 
+        // Get Values
+        let code = null;
+        let password = null;
+        if(req.body && req.body.code && req.body.code.length > 0){
+            code = req.body.code;
+        }else{
+            return res.build(false, 'Please, type your recovery code to reset password', { redirect: '/auth/reset/' });
+        }
+        if(req.body && req.body.password && req.body.password.length > 0){
+            password = req.body.password;
+        }else{
+            return res.build(false, 'Please, type your new password to recover account', { redirect: '/auth/reset/' });
+        }
+        let validatedCode = Authentication.FilterCode(code);
+        if(validatedCode == null){
+            return res.build(false, 'Failed to complete recovery process. Provided validation code has wrong format.', { redirect: '/auth/reset/' });
+        }
+
+        // Check Password Confirmation
+        let confirmPass = req.body.confirm_password ?? null;
+        if(confirmPass == null || confirmPass != password){
+            return res.build(false, 'The passwords you entered do not match. Check if it is correct and try again.', { redirect: '/auth/reset/'});
+        }
+
+        // Validate Code
+        Authentication.ValidateCode(validatedCode, function(userId){
+            // Change Password
+            Authentication.ChangeAuthData(userId, password, function(){
+                return res.build(true, null, { redirect: '/auth/?pass_changed=true' });
+            }, function(error){
+                return res.build(false, error, { redirect: '/auth/reset/' });
+            });
+        }, function(error){
+            return res.build(false, error, { redirect: '/auth/reset/' });
+        }, 'recovery');
     }
 
     // Confirm Account
     static ConfirmAccount(req, res){
         // Check if is already authenticated
-        if(Authentication.IsAlreadyAuthenticated(req, res)){
+        if(req.isAuth){
             return res.build(true, null, { redirect: '/user/' });
         }
 
@@ -179,12 +336,18 @@ class Authentication {
 
     // Link Social Account
     static LinkSocial(req, res){
-
+        
     }
 
     // Change Password of active user
     static ChangePassword(req, res){
+        // Check if is already authenticated
+        if(!req.isAuth){
+            return res.build(true, null, { redirect: '/auth/' });
+        }
+
         
+
     }
 
     // Filter Base Values
@@ -205,104 +368,7 @@ class Authentication {
         return null;
     }
 
-    // Setup Local Strategies
-    static SetupLocalStartegies(){
-        const temporaryEnd = new Date();
-        const guestLifetime = Config?.Authentication?.GuestLifetime ?? 12;
-        temporaryEnd.setMonth(temporaryEnd.getMonth() + guestLifetime);
-
-        // Local Sign-Up
-        Authentication.passport.use('local-signup', new Authentication.LocalStrategy({
-            usernameField: 'email',
-            passwordField: 'password',
-            passReqToCallback: true
-        }, function (req, email, password, done) {
-            // Check Password Confirmation
-            let confirmPass = req.body.confirm_password ?? null;
-            if(confirmPass == null || confirmPass != password){
-                return done(null, false, {
-                    message: 'The passwords you entered do not match. Check if it is correct and try again.'
-                });
-            }
-
-            // Create User Data
-            Authentication.CreateUserData({
-                firstname: req.body.firstname ?? "",
-                lastname: req.body.lastname ?? "",
-                username: req.body.username,
-                about: "",
-                email: email,
-                avatar: "",
-                status: Config?.Authentication?.ConfirmEmails ? "inactive" : "active",
-                temporaryEnd: temporaryEnd
-            }, function(newUser){
-                // Return Authentication Data
-                Authentication.CreateAuthData(email, password, 'local', newUser.id, function(newAuth){
-                    Authentication.SendRegistrationEmail(newUser.id, newUser.email, newUser.username, function(){
-                        Debug.Log(`New User Registered: ID: ${newUser.id}, Email: ${email}, Username: ${newUser.username}`);
-                        return done(null, newAuth);
-                    }, function(error){
-                        return done(null, false, {
-                            message: error?.message ?? error
-                        });
-                    });
-                }, function(error){
-                    return done(null, false, {
-                        message: error?.message ?? error
-                    });
-                });
-            }, function(error){
-                return done(null, false, {
-                    message: error?.message ?? error
-                });
-            });
-        }));
-    
-        // Local Sign-In
-        Authentication.passport.use('local-signin', new Authentication.LocalStrategy({
-            usernameField: 'email',
-            passwordField: 'password',
-            passReqToCallback: true
-        }, function (req, email, password, done) {
-            Authentication.CheckAuthData(email, password, 'local', function(authData){
-                return done(null, authData);
-            }, function(error){
-                return done(null, false, {
-                    message: error?.message ?? error
-                });
-            });
-        }));
-
-        // Json Custom Auth
-        Authentication.passport.use('json-custom', new Authentication.JsonCustom({
-            passReqToCallback: true
-        }, function(req, credentials, done){
-            if(!credentials.user_id){
-                return done(null, false, {
-                    message: "Failed to authenticate. No user id provided in request."
-                });
-            }
-
-            if(!credentials.token){
-                return done(null, false, {
-                    message: "Failed to authenticate. No user token provided in request."
-                });
-            }
-
-            if(!credentials.from){
-                credentials.from = 'local';
-            }
-
-            Authentication.CheckAuthCredentials(credentials.user_id, credentials.token, credentials.from, function(authData){
-                return done(null, authData);
-            }, function(error){
-                return done(null, false, {
-                    message: error?.message ?? error
-                });
-            });
-        }));
-    }
-
+    // Send Registration Email
     static SendRegistrationEmail(userId, email, username, onSuccess, onError){
         // Send Email
         if(Config?.Authentication?.ConfirmEmails){
@@ -344,28 +410,27 @@ class Authentication {
         }
     }
 
-    // Serialize and Deserialize User
-    static SerializeDeserialize(AuthModel){
-        Authentication.passport.serializeUser(function (user, done) {
-            done(null, user.id);
-        });
-        Authentication.passport.deserializeUser(function (id, done) {
-            AuthModel.findOne({
-                where: {
-                    id: id
-                }
-            }).then(function (user) {
-                if (user) {
-                    done(null, user.get());
-                } else {
-                    done(`User with ID ${id} is not found at the system.`, null);
-                }
-            }).catch(function (err) {
-                Debug.Log(err);
-                done(err, null);
+    // Send Forgot Email
+    static SendForgotEmail(userId, email, username, onSuccess, onError){
+        // Send Template
+        Authentication.GenerateActivationKey(userId, function(codeData){
+            Emails.SendTemplate(email, `${Config?.Application?.Name} Account Recovery`, 'account_confirm', {
+                TITLE: 'Account Recovery',
+                APPLICATION: Config?.Application?.Name ?? "AppSway",
+                KEY: codeData.code,
+                EMAIL: email,
+                LINK: `https://${Config?.Application?.Domain}/auth/reset/?code=${codeData.code}`,
+                PRIVACY_LINK: `https://${Config?.Application?.Domain}/terms/privacy/`,
+                TERMS_LINK: `https://${Config?.Application?.Domain}/terms/general/`,
+                YEAR: new Date().getFullYear()
+            }).then(function(){}).catch(function (err) {
                 return;
             });
-        });
+            
+            onSuccess();
+        }, function(error){
+            onError(error);
+        }, 'recovery');
     }
 
     // Create Auth Data
@@ -414,6 +479,46 @@ class Authentication {
         });
     }
 
+    // Change Authentication Data
+    static ChangeAuthData(userId, token, onComplete, onError){
+        // Generate Hash
+        var generateHash = function (password) {
+            return bCrypt.hashSync(token, bCrypt.genSaltSync(8), null);
+        };
+
+        // Find Authentication Data by User Id
+        Authentication.Auth.findOne({
+            where: {
+                user_id: userId,
+                from: 'local'
+            }
+        }).then(function(auth){
+            if(!auth){
+                onError('Failed to change user credentials. Authentication data for this user is not found.');
+                return;
+            }
+
+            // Generate Auth Data
+            var userPassword = generateHash(token);
+            Authentication.Auth.update({
+                token: userPassword
+            }, { 
+                where: {
+                    user_id: userId,
+                    from: 'local'
+                }
+            }).then(function(newAuth){
+                onComplete();
+            }).catch(function (err) {
+                onError(err);
+                return;
+            });
+        }).catch(function (err) {
+            onError(err);
+            return;
+        });
+    }
+
     // Create User Data
     static CreateUserData(userData, onComplete, onError){
         // Find Authentication
@@ -454,6 +559,12 @@ class Authentication {
             return bCrypt.compareSync(password, userpass);
         };
 
+        // Check with Validator
+        if(!Validator.isAlphanumeric(from)){
+            onError('Failed to confirm authenitcation credentials. From flag must contain only alphanumeric values.');
+            return;
+        }
+
         // Find Auth Data
         Authentication.Auth.findOne({
             login: login,
@@ -473,7 +584,7 @@ class Authentication {
             // Get Authentication Data
             var authData = auth.get();
             Authentication.GetUserByID(authData.user_id, function(userData){
-                onComplete(authData);
+                onComplete(authData, userData);
                 return;
             }, function(error){
                 onError(error);
@@ -487,10 +598,15 @@ class Authentication {
 
     // Check Auth Credentials
     static CheckAuthCredentials(user_id, token, from, onComplete, onError){
-        // Check Valid Password
-        var isValidPassword = function (userpass, password) {
-            return bCrypt.compareSync(password, userpass);
-        };
+        // Check with Validator
+        if(!Validator.isUUID(user_id, 4)){
+            onError('Failed to confirm authenitcation credentials. User ID must contain UUIDv4 string.');
+            return;
+        }
+        if(!Validator.isAlphanumeric(from)){
+            onError('Failed to confirm authenitcation credentials. From flag must contain only alphanumeric values.');
+            return;
+        }
 
         // Find Auth Data
         Authentication.Auth.findOne({
@@ -503,23 +619,29 @@ class Authentication {
             }
 
             // Check Password is Valid
-            if(auth.from == 'local'){
-                if (!isValidPassword(auth.token, token)) {
-                    onError('Authentication Error. Invalid password or login information.');
-                    return;
-                }
-            }else{
-                if(auth.token !== token){
-                    onError('Authentication Error. Invalid token or login information.');
-                    return;
-                }
+            if(auth.token !== token){
+                onError('Authentication Error. Invalid token or login information.');
+                return;
             }
             
             // Get Authentication Data
             var authData = auth.get();
             Authentication.GetUserByID(user_id, function(userData){
-                onComplete(authData);
-                return;
+                // Update Online
+                let endDate = new Date();
+                if(((endDate.getTime() - userData.last_online.getTime()) / 1000) > 600){
+                    Authentication.SetUserOnline(user_id, function(){
+                        userData.last_online = endDate;
+                        onComplete(authData, userData);
+                        return;
+                    }, function(error){
+                        onError(error);
+                        return;
+                    });
+                }else{
+                    onComplete(authData, userData);
+                    return;
+                }
             }, function(error){
                 onError(error);
                 return;
@@ -532,8 +654,16 @@ class Authentication {
 
     // Get User by ID
     static GetUserByID(userId, onComplete, onError){
+        if(!Validator.isUUID(userId, 4)){
+            onError('Failed to get user profile. User ID must contain UUIDv4 string.');
+            return;
+        }
+
+        // Find User
         Authentication.User.findOne({
-            id: userId
+            where: {
+                id: userId
+            }
         }).then(function (user) {
             // Check User Exists
             if(!user){
@@ -554,6 +684,29 @@ class Authentication {
 
             // Return Auth Data
             onComplete(userData);
+            return;
+        }).catch(function (err) {
+            onError(err);
+            return;
+        });
+    }
+
+    // Set User Online
+    static SetUserOnline(userId, onComplete, onError){
+        if(!Validator.isUUID(userId, 4)){
+            onError('Failed to get user profile. User ID must contain UUIDv4 string.');
+            return;
+        }
+
+        // Find User
+        Authentication.User.update({
+            last_online: new Date()
+        }, {
+            where: {
+                id: userId
+            }
+        }).then(function (updated) {
+            onComplete();
             return;
         }).catch(function (err) {
             onError(err);
@@ -585,7 +738,7 @@ class Authentication {
             }
         }).then(function (user) {
             if (user) { // User found
-                onError('An email has already been sent to this user requesting account activation');
+                onError(`An email has already been sent to this user requesting account ${codeType}`);
                 return;
             }
 
@@ -611,17 +764,18 @@ class Authentication {
     }
 
     // Validate Code
-    static ValidateCode(validatedCode, onComplete, onError) {
+    static ValidateCode(validatedCode, onComplete, onError, codeType = 'activation') {
+        // Validate Code
         Authentication.Codes.findOne({
             where: {
-                code: validatedCode
+                code: validatedCode,
+                type: codeType
             }
         }).then(function (codeData) {
             if (!codeData) { // Code not found
                 onError('This code is not found. Please, check your code and try again.');
                 return;
             }
-
 
             // Get Code Info
             let codeInfo = codeData.get();
@@ -672,6 +826,7 @@ class Authentication {
                         onError(err);
                         return;
                     });
+                    return;
                 }
 
                 // Code is Not Expired
@@ -696,7 +851,7 @@ class Authentication {
                         return;
                     });
                 }else{
-                    onComplete();
+                    onComplete(userData.id);
                     return;
                 }
             }).catch(function (err) {

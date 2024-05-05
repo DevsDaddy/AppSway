@@ -17,6 +17,7 @@ class Router {
         this.app = null;
         this.routes = [];
         this.system_routes = [];
+        this.addons = [];
     }
 
     // Collect Routes
@@ -29,6 +30,22 @@ class Router {
         self.app.use(self.SetupFromRequest);
         self.app.use(self.SetupSafeRedirect);
         self.app.use(self.SetupSeparatedResponse);
+
+        // Collect Addons
+        fs.readdirSync(`${ADDONS_DIR}`, { withFileTypes: true }).filter(function (dirent) {
+            return dirent.isDirectory();
+        }).map(dirent => dirent.name).forEach(addonName => {
+            let modRoutes = path.join(CORE_DIR, `/${addonName}/index.js`);
+            if(fs.existsSync(modRoutes)){
+                let moduleRoutes = require(modRoutes);
+                moduleRoutes.Init();
+                self.addons.push(moduleRoutes);
+            }
+        });
+
+        Debug.Log(`${self.addons.length} addons are initialized at application.`);
+
+        // Collect Middlewares
 
         // Collect System Routes
         fs.readdirSync(`${CORE_DIR}`, { withFileTypes: true }).filter(function (dirent) {

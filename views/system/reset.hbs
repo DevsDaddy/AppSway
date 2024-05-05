@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="{{#if language includeZero=true}}{{language}}{{else}}en{{/if}}" dir="ltr" data-nav-layout="vertical" data-theme-mode="dark" data-header-styles="dark" data-menu-styles="dark" data-toggled="close">
+    <head>
+        {{> meta }}
+        {{> theme_base }}
+    </head>
+    <body>
+        <!-- Loader -->
+        <div id="loader" >
+            <img src="/assets/images/media/loader.svg" alt="">
+        </div>
+        <!-- Loader -->
+
+        <div class="container-lg">
+            <div class="row justify-content-center authentication authentication-basic align-items-center h-100">
+                <div class="col-xxl-4 col-xl-5 col-lg-5 col-md-6 col-sm-8 col-12">
+                    <div class="my-4 d-flex justify-content-center">
+                        <a href="/">
+                            <img src="/assets/images/brand-logos/desktop-dark.png" alt="logo">
+                        </a>
+                    </div>
+                    <div class="card custom-card">
+                        <div class="card-body p-5">
+                            <p class="h5 fw-semibold mb-2 text-center">Reset your password</p>
+                            <p class="mb-4 text-muted op-7 fw-normal text-center">Here you can reset your {{APP_NAME}} account password. Enter the recovery code you received by email and create a new password.</p>
+
+                            {{#if error includeZero=true}}
+                            <div id="error" class="alert alert-danger rounded-pill fade show">
+                                {{error}}
+                            </div>
+                            {{/if}}
+                            <form id="reset" autocomplete="off" name="reset" method="post" action="/auth/reset_password/">
+                                <input autocomplete="false" name="hidden" type="text" style="display:none;">
+                                {{#if redirect includeZero=true}}
+                                <input type="hidden" name="redirect" value="{{redirect}}" />
+                                {{/if}}
+                                <input type="hidden" name="from" value="web" />
+                                <div class="row gy-3">
+                                    <div class="col-xl-12">
+                                        <label for="activation-code" class="form-label text-default">Recovery Code:</label>
+                                        <input type="text" value="{{#if code includeZero=true}}{{code}}{{/if}}" required class="form-control form-control-lg delimiter" id="activation-code" name="code" placeholder="Please, type your Recovery Code">
+                                    </div>
+                                    <div class="col-xl-12 mb-2">
+                                        <label for="signup-password" class="form-label text-default">Create New Password</label>
+                                        <div class="input-group">
+                                            <input type="password" required name="password" maxlength="32" class="form-control form-control-lg" id="signup-password" placeholder="Please, type your new password">
+                                            <button aria-label="button" class="btn btn-light" data-action="show_password" data-form="signup-password" type="button" id="button-addon23"><i class="ri-eye-off-line align-middle"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-12 mb-2">
+                                        <label for="signup-confirmpassword" class="form-label text-default">Confirm Password</label>
+                                        <div class="input-group">
+                                            <input type="password" required name="confirm_password" maxlength="32" class="form-control form-control-lg" id="signup-confirmpassword" placeholder="Confirm your new Password">
+                                            <button aria-label="button" class="btn btn-light" data-action="show_password" data-form="signup-confirmpassword" type="button" id="button-addon21"><i class="ri-eye-off-line align-middle"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="col-xl-12 d-grid mt-2">
+                                        <button type="submit" class="btn btn-lg btn-primary">Reset Password</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{> base_scripts }}
+
+        <!-- Cleave.js -->
+        <script src="/assets/libs/cleave.js/cleave.min.js"></script>
+        <!-- Internal form-input-mask JS -->
+        <script src="/assets/js/form-input-mask.js"></script>
+        <script src="/assets/js/show-password.js"></script>
+    </body>
+</html>

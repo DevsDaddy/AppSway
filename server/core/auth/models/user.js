@@ -40,6 +40,32 @@ module.exports = function(database, Sequelize, DataTypes) {
                 }
             }
         },
+        country: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            validate: {
+                lenValidate(value){
+                    if(value !== undefined && value != null && value.length > 0){
+                        if(value.length < 2 || value.length > 30){
+                            throw new Error(`Country must be from 2 to 30 symbols.`);
+                        }
+                    }
+                }
+            }
+        },
+        city: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            validate: {
+                lenValidate(value){
+                    if(value !== undefined && value != null && value.length > 0){
+                        if(value.length < 2 || value.length > 50){
+                            throw new Error(`City must be from 2 to 50 symbols.`);
+                        }
+                    }
+                }
+            }
+        },
         username: {
             type: DataTypes.STRING,
             notEmpty: true,

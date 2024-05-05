@@ -34,6 +34,11 @@
                                 Your account has been successfully verified. You can now log in using your credentials.
                             </div>
                             {{/if}}
+                            {{#if password_changed includeZero=true}}
+                            <div class="alert alert-success rounded-pill fade show">
+                                The password to your account has been successfully changed. You can now log in using the new password.
+                            </div>
+                            {{/if}}
                             <form id="signin" name="signin" method="post" action="/auth/login/">
                                 {{#if redirect includeZero=true}}
                                 <input type="hidden" name="redirect" value="{{redirect}}" />

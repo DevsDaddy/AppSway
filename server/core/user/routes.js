@@ -38,6 +38,9 @@ router.get("/", Auth.CheckAuthentication, async (req, res, next) => {
     let contacts = await User.GetUserContacts(req.user.id);
     let additionalData = await User.GetUserAdditionalData(req.user.id);
 
+    Debug.Log(req.t('LanguageName'));
+    Debug.Log(req.language);
+
     // Render Profile
     return res.render("profile/index", {
         title: "My Profile",

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{#if language includeZero=true}}{{language}}{{else}}en{{/if}}" dir="ltr" data-nav-layout="vertical" data-theme-mode="dark" data-header-styles="dark" data-menu-styles="dark" data-toggled="close">
+<html lang="{{#if LANGUAGE includeZero=true}}{{LANGUAGE}}{{else}}en{{/if}}" dir="ltr" data-nav-layout="vertical" data-theme-mode="dark" data-header-styles="dark" data-menu-styles="dark" data-toggled="close">
     <head>
         {{> meta }}
         {{> dashboard_base }}
@@ -70,7 +70,7 @@
                                     <div class="d-flex align-items-center justify-content-between w-100">
                                         <div class="py-3 border-end w-100 text-center">
                                             <p class="fw-bold fs-20  text-shadow mb-0">113</p>
-                                            <p class="mb-0 fs-12 text-muted ">Projects</p>
+                                            <p class="mb-0 fs-12 text-muted ">{{{locale 'LanguageName' 'Mario!'}}}</p>
                                         </div>
                                         <div class="py-3 border-end w-100 text-center">
                                             <p class="fw-bold fs-20  text-shadow mb-0">12.2k</p>

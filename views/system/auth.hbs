@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{#if language includeZero=true}}{{language}}{{else}}en{{/if}}" dir="ltr" data-nav-layout="vertical" data-theme-mode="dark" data-header-styles="dark" data-menu-styles="dark" data-toggled="close">
+<html lang="{{#if LANGUAGE includeZero=true}}{{LANGUAGE}}{{else}}en{{/if}}" dir="ltr" data-nav-layout="vertical" data-theme-mode="dark" data-header-styles="dark" data-menu-styles="dark" data-toggled="close">
     <head>
         {{> meta }}
         {{> theme_base }}
@@ -21,8 +21,32 @@
                     </div>
                     <div class="card custom-card">
                         <div class="card-body p-5">
-                            <p class="h5 fw-semibold mb-2 text-center">Sign In</p>
-                            <p class="mb-4 text-muted op-7 fw-normal text-center">Welcome back to <b>{{APP_NAME}}</b>!</p>
+                            <!-- Start::header-element -->
+                            <div class="header-element country-selector" style="text-align: center; margin-bottom: 20px;">
+                                <!-- Start::header-link|dropdown-toggle -->
+                                <a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-auto-close="outside"
+                                    data-bs-toggle="dropdown">
+                                    <img src="/assets/images/flags/{{LANGUAGE}}.png" alt="img" class="rounded-circle">
+                                </a>
+                            
+                                <!-- End::header-link|dropdown-toggle -->
+                                <ul class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="none">
+                                    {{#each LANGUAGES}}
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center" href="?lng={{code}}">
+                                            <span class="avatar avatar-xs lh-1 me-2">
+                                                <img src="{{icon}}" alt="{{name}}">
+                                            </span>
+                                            {{name}}
+                                        </a>
+                                    </li>
+                                    {{/each}}
+                                </ul>
+                            </div>
+                            <!-- End::header-element -->
+
+                            <p class="h5 fw-semibold mb-2 text-center">{{{locale 'Users.SignIn' 'Sign In'}}}</p>
+                            <p class="mb-4 text-muted op-7 fw-normal text-center">{{{locale 'Users.WelcomeBack' 'Welcome back to'}}} <b>{{APP_NAME}}</b>!</p>
 
                             {{#if error includeZero=true}}
                             <div id="error" class="alert alert-danger rounded-pill fade show">

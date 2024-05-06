@@ -12,6 +12,9 @@ const helmet        =       require('helmet');                          // Helme
 const hbs           =       require('express-hbs');                     // Require Handlebars Renderer
 const session       =       require('express-session');                 // Require Express Session
 const bodyParser    =       require('body-parser');                     // Require Body Parser
+const i18next       =       require("i18next");                         // Localization Manager
+const localeMiddleware =    require("i18next-http-middleware");         // Express Middleware for Localization
+const localeBackend =       require('i18next-fs-backend');              // Localization Backend
 
 //  Define Constants
 global.ROOT_DIR     =       path.join(__dirname, "");                   // Root Directory
@@ -22,6 +25,7 @@ global.LOG_DIR      =       path.join(ROOT_DIR, "/logs");               // Logs 
 global.STATIC_DIR   =       path.join(ROOT_DIR, "/static");             // Static Directory
 global.VIEWS_DIR    =       path.join(ROOT_DIR, "/views");              // Setup Views Directory
 global.ADDONS_DIR   =       path.join(ROOT_DIR, "/server/addons");      // Setup Addons Directory
+global.LOCALE_DIR   =       path.join(ROOT_DIR, "/server/locale");      // Setup Locales Directory
 
 //  Load Configuration and Debug
 const Config        =       require(`${ROOT_DIR}/config`);              // Require Config
@@ -61,6 +65,21 @@ DataLayer.Connect().then(async db => {
     app.use(Transport.AddToMiddleware);                                     // Add Transport Instance Middleware (req.transport)
     app.disable('x-powered-by');                                            // Disable Powered-By
 
+    // Setup Localization
+    i18next.use(localeBackend).use(localeMiddleware.LanguageDetector)
+    .init({
+        backend: {
+            loadPath: LOCALE_DIR + '/{{lng}}/{{ns}}.json',
+        },
+        detection: {
+            order: ['querystring', 'cookie', 'session'],
+            caches: ['cookie']
+        },
+        fallbackLng: 'en',
+        preload: ['en', 'ru']
+    });
+    app.use(localeMiddleware.handle(i18next));
+
     //  Setup Render Engine
     app.engine('hbs', hbs.express4({
         partialsDir: `${VIEWS_DIR}/common/_partials`,
@@ -73,8 +92,8 @@ DataLayer.Connect().then(async db => {
     HBSAddons.Init(app, hbs);
 
     //  Setup Routing
-    app.use(express.static('static'));                                      // Add Static Routes
-    Router.CollectRoutes(app);                                              // Collect Routes for Application
+    app.use(express.static('static'));                                      // Add Static Routes 
+    Router.CollectRoutes(app, hbs);                                         // Collect Routes for Application
 
     //  Setup Transport
     Transport.Setup(app);

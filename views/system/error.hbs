@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{#if language includeZero=true}}{{language}}{{else}}en{{/if}}" dir="ltr" data-nav-layout="vertical" data-theme-mode="dark" data-header-styles="dark" data-menu-styles="dark" data-toggled="close">
+<html lang="{{#if LANGUAGE includeZero=true}}{{LANGUAGE}}{{else}}en{{/if}}" dir="ltr" data-nav-layout="vertical" data-theme-mode="dark" data-header-styles="dark" data-menu-styles="dark" data-toggled="close">
     <head>
         {{> meta }}
         {{> theme_base }}
@@ -33,7 +33,7 @@
                             </div>
                             {{/if}}
                             <div class="text-center">
-                                <a class="btn btn-secondary d-inline-flex gap-1" href="/"> <i class="ri-arrow-left-line my-auto "></i> Back to Home </a>
+                                <a class="btn btn-secondary d-inline-flex gap-1" href="/"> <i class="ri-arrow-left-line my-auto "></i> {{{locale 'General.BackHome' 'Back to Home'}}}</a>
                             </div>
                         </div>
                     </div>

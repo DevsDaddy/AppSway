@@ -27,6 +27,7 @@ class HBSUtils {
         this.FileReader();
         this.Operators();
         this.Split();
+        this.ForArr();
     }
 
     // Link Helper
@@ -45,7 +46,7 @@ class HBSUtils {
     }
 
     // Split Comma-Separated Lists
-    // {{{split data ','}}}
+    // {{#split data ','}}
     Split(){
         let self = this;
         self.hbs.registerHelper('split', function(text, separator, block) {
@@ -54,6 +55,21 @@ class HBSUtils {
             for(var i = 0; i < splitted.length; ++i){
                 if(splitted[i].length > 0)
                     accum += block.fn(splitted[i]);
+            }
+            
+            return accum;
+        });
+    }
+
+    // For Array
+    // {{#ForArr data}}
+    ForArr(){
+        let self = this;
+        self.hbs.registerHelper('ForArr', function(data, block) {
+            var accum = '';
+            for(var i = 0; i < data.length; ++i){
+                if(data[i].length > 0)
+                    accum += block.fn(data[i]);
             }
             
             return accum;

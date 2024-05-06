@@ -11,25 +11,29 @@ const fs            =       require('fs');                              // File 
 const Config        =       require(`${ROOT_DIR}/config`);              // Require Config
 const Debug         =       require(`${CORE_DIR}/debug`);               // Require Debug Library
 
+let hbs = null;
+let app = null;
+
 // Router Class
 class Router {
     constructor(){
-        this.app = null;
         this.routes = [];
         this.system_routes = [];
         this.addons = [];
     }
 
     // Collect Routes
-    async CollectRoutes(app){
-        let self = this;
-        self.app = app;
-        await this.SetupApplicationLocals();
+    async CollectRoutes(application, handlebars){
+        app = application;
+        hbs = handlebars;
+        this.SetupApplicationLocals();
 
         // Setup Safe Redirect
-        self.app.use(self.SetupFromRequest);
-        self.app.use(self.SetupSafeRedirect);
-        self.app.use(self.SetupSeparatedResponse);
+        let self = this;
+        app.use(self.SetupFromRequest);
+        app.use(self.SetupSafeRedirect);
+        app.use(self.SetupSeparatedResponse);
+        app.use(self.SetupHBSRequestHelpers);
 
         // Collect Addons
         fs.readdirSync(`${ADDONS_DIR}`, { withFileTypes: true }).filter(function (dirent) {
@@ -54,7 +58,7 @@ class Router {
             let modRoutes = path.join(CORE_DIR, `/${moduleName}/routes.js`);
             if(fs.existsSync(modRoutes)){
                 let moduleRoutes = require(modRoutes);
-                self.app.use(`/${moduleName}/`, moduleRoutes);
+                app.use(`/${moduleName}/`, moduleRoutes);
                 self.system_routes.push(moduleRoutes);
             }
         });
@@ -68,7 +72,7 @@ class Router {
             let modRoutes = path.join(APP_DIR, `/${moduleName}/routes.js`);
             if(fs.existsSync(modRoutes)){
                 let moduleRoutes = require(modRoutes);
-                self.app.use(`/${moduleName}/`, moduleRoutes);
+                app.use(`/${moduleName}/`, moduleRoutes);
                 self.routes.push(moduleRoutes);
             }
         });
@@ -76,8 +80,20 @@ class Router {
         Debug.Log(`${self.routes.length} modules routes are initialized at application.`);
 
         // Last Routes are Errors
-        self.app.use(self.NotFoundHandler);
-        self.app.use(self.HandleErrors);
+        app.use(self.NotFoundHandler);
+        app.use(self.HandleErrors);
+    }
+
+    // Setup HBS Request Helpers
+    async SetupHBSRequestHelpers(req, res, next){
+        // Register Locale Helper
+        hbs.registerHelper('locale', function(key, defaults) {
+            return new hbs.SafeString(req.t(key, defaults));
+        });
+
+        // Setup Current Language
+        app.locals.LANGUAGE = req.language;
+        next();
     }
 
     // Setup From Requests
@@ -170,19 +186,35 @@ class Router {
     }
 
     // Setup Application Locals
-    async SetupApplicationLocals(){
-        let self = this;
-        self.app.locals.APP_NAME = Config?.Application?.Name ?? "App Sway";
-        self.app.locals.APP_DOMAIN = Config?.Application?.Domain ?? "localhost";
-        self.app.locals.APP_DESC = Config?.Application?.Description ?? "This is the demo application";
-        self.app.locals.APP_AUTHOR = Config?.Application?.Author ?? "DevsDaddy";
+    SetupApplicationLocals(){
+        app.locals.APP_NAME = Config?.Application?.Name ?? "App Sway";
+        app.locals.APP_DOMAIN = Config?.Application?.Domain ?? "localhost";
+        app.locals.APP_DESC = Config?.Application?.Description ?? "This is the demo application";
+        app.locals.APP_AUTHOR = Config?.Application?.Author ?? "DevsDaddy";
+
+        // Setup Application Languages
+        let locales = [];
+
+        // Collect Locales
+        fs.readdirSync(`${LOCALE_DIR}`, { withFileTypes: true }).filter(function (dirent) {
+            return dirent.isDirectory();
+        }).map(dirent => dirent.name).forEach(addonName => {
+            let modRoutes = path.join(LOCALE_DIR, `/${addonName}/locale.json`);
+            if(fs.existsSync(modRoutes)){
+                let localeInfo = JSON.parse(fs.readFileSync(modRoutes));
+                locales.push(localeInfo);
+            }
+        });
+
+        Debug.Log(`${locales.length} system locales detected for switching.`);
+        app.locals.LANGUAGES = locales;
     }
 
     // Not Found Handler
     async NotFoundHandler(req, res, next){
         let code = 404;
-        let title = "Oops! Page Not Found";
-        let message = "Unfortunately, we were unable to find the content you requested. It may have been removed or moved.";
+        let title = req.t('Error.Title', "Oops! Page Not Found");
+        let message = req.t('Error.NotFound');
         let stack = null;
 
         // API or Page Render
@@ -205,7 +237,7 @@ class Router {
     async HandleErrors(err, req, res, next){
         let code = 500;
         let title = "Oops! Internal Server Error";
-        let message = err?.message ?? "An unexpected server error occurred while the script was running. Try your request again later.";
+        let message = err?.message ?? req.t('Error.ServerError');
         let stack = (Config?.Environment == "development") ? err?.stack ?? "No Stack Provided for this Error" : null;
 
         // API or Page Render

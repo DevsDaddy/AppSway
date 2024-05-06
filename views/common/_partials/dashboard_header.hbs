@@ -33,6 +33,30 @@
         <!-- Start::header-content-right -->
         <div class="header-content-right">
             <!-- Start::header-element -->
+            <div class="header-element country-selector">
+                <!-- Start::header-link|dropdown-toggle -->
+                <a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-auto-close="outside"
+                    data-bs-toggle="dropdown">
+                    <img src="/assets/images/flags/{{LANGUAGE}}.png" alt="img" class="rounded-circle">
+                </a>
+            
+                <!-- End::header-link|dropdown-toggle -->
+                <ul class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="none">
+                    {{#each LANGUAGES}}
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center" href="?lng={{code}}">
+                            <span class="avatar avatar-xs lh-1 me-2">
+                                <img src="{{icon}}" alt="{{name}}">
+                            </span>
+                            {{name}}
+                        </a>
+                    </li>
+                    {{/each}}
+                </ul>
+            </div>
+            <!-- End::header-element -->
+
+            <!-- Start::header-element -->
             <div class="header-element notifications-dropdown">
                 <!-- Start::header-link|dropdown-toggle -->
                 <a aria-label="anchor" href="javascript:void(0);" class="header-link dropdown-toggle"

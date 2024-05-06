@@ -20,6 +20,7 @@ class User {
         User.Profile = DataLayer.LoadModel('User', path.join(CORE_DIR, '/auth/models/user'));
         User.Contacts = DataLayer.LoadModel('UserContacts', path.join(CORE_DIR, '/user/models/user_contacts'));
         User.Additional = DataLayer.LoadModel('UserAdditional', path.join(CORE_DIR, '/user/models/user_additional'));
+        User.Settings = DataLayer.LoadModel('UserSettings', path.join(CORE_DIR, '/user/models/user_settings'));
     }
 
     // Get User Contacts
@@ -41,6 +42,21 @@ class User {
     static async GetUserAdditionalData(userId){
         try{
             var user = await User.Additional.findOne({
+                where: {
+                    user_id: userId
+                }
+            });
+            var userData = user?.get() ?? null;
+            return userData;
+        }catch(error){
+            return false;
+        }
+    }
+
+    // Get User Settings by ID
+    static async GetUserSettings(userId){
+        try{
+            var user = await User.Settings.findOne({
                 where: {
                     user_id: userId
                 }
